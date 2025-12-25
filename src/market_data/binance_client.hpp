@@ -35,12 +35,7 @@ using OnDisconnected = std::function<void()>;
 
 /**
  * Binance WebSocket client for market data streaming.
- * 
- * Connects to Binance's WebSocket API and streams real-time:
- * - Order book depth updates
- * - Trade events
- * 
- * Thread-safe: runs I/O in a separate thread.
+ * Uses simdjson for fast JSON parsing.
  */
 class BinanceClient : public std::enable_shared_from_this<BinanceClient> {
 public:
@@ -48,7 +43,7 @@ public:
     ~BinanceClient();
     
     // Configuration
-    void SetSymbol(const std::string& symbol);  // e.g., "btcusdt"
+    void SetSymbol(const std::string& symbol);
     
     // Callbacks
     void SetOnDepthUpdate(OnDepthUpdate callback) { on_depth_update_ = callback; }
@@ -93,6 +88,9 @@ private:
     std::unique_ptr<websocket::stream<beast::ssl_stream<tcp::socket>>> ws_;
     tcp::resolver resolver_;
     beast::flat_buffer buffer_;
+    
+    // Fast JSON parser (reused)
+    FastJsonParser json_parser_;
     
     // Thread management
     std::thread io_thread_;
